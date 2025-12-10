@@ -14,5 +14,6 @@ class Chat extends Model
         'message',
         'type',
         'caption',
+        'attachment_path',
     ];
 }

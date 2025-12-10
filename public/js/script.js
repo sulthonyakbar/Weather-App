@@ -49,7 +49,7 @@ document.getElementById('composer').addEventListener('submit', async e => {
         if (data.type === "image") {
             appendImage(data.url, data.caption);
         } else if (data.type === "video") {
-            appendVideo(data.video_url, data.caption);
+            appendVideo(data.attachment_path, data.caption);
         } else if (data.type === "audio") {
             appendAudio(data.url, data.caption);
         } else if (data.type === "gif") {
@@ -129,7 +129,7 @@ function appendImage(url) {
     scrollBottom();
 }
 
-function appendVideo(video_url) {
+function appendVideo(attachment_path) {
     const wrapper = document.createElement('div');
     wrapper.className = 'flex items-start space-x-3';
 
@@ -142,7 +142,7 @@ function appendVideo(video_url) {
                 <div>
                     <figure class="max-w-xs">
                         <video controls class="rounded-xl max-w-xs shadow">
-                            <source src="${video_url}" type="video/mp4">
+                            <source src="${attachment_path}" type="video/mp4">
                         </video>
                         ${caption ? `<figcaption class="text-xs text-gray-500 dark:text-gray-400 italic mt-2">${escapeHtml(caption)}</figcaption>` : ''}
                         <div class="text-xs text-gray-500 mt-1">${timeNow()}</div>

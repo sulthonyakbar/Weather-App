@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Models\Chat;
+use Illuminate\Support\Facades\Storage;
 
 class ChatController extends Controller
 {
@@ -14,41 +15,42 @@ class ChatController extends Controller
         return view('chat', compact('chats'));
     }
 
-    private function saveChat($sender, $message, $type, $caption = null)
+    private function saveChat($sender, $message, $type, $caption = null, $attachment_path = null)
     {
         Chat::create([
             'sender' => $sender,
             'message' => $message,
             'type' => $type ?? 'text',
             'caption' => $caption ?? null,
+            'attachment_path' => $attachment_path ?? null,
         ]);
     }
 
     public function handleChat(Request $request)
     {
         $text = strtolower($request->input('message'));
-        $this->saveChat('user', $text, 'text', null);
+        $this->saveChat('user', $text, 'text', null, null);
 
         switch (true) {
             case str_contains($text, 'gambarkan cuaca') || str_contains($text, 'buatkan gambar cuaca') || str_contains($text, 'gambar cuaca'):
                 $response = $this->gambarCuaca($text);
-                $this->saveChat('ai', $response->getData()->url ?? $response->getData()->prompt ?? '', 'image', $response->getData()->caption ?? '');
+                $this->saveChat('ai', $response->getData()->url ?? $response->getData()->prompt ?? '', 'image', $response->getData()->caption ?? '', null);
                 return $response;
 
             case str_contains($text, 'video cuaca') || str_contains($text, 'buatkan video cuaca') || str_contains($text, 'tolong video cuaca'):
                 $response = $this->videoCuaca($text);
-                $this->saveChat('ai', $response->getData()->video_url ?? $response->getData()->text ?? '', 'video', $response->getData()->caption ?? '');
+                $this->saveChat('ai', $response->getData()->video_url ?? $response->getData()->text ?? '', 'video', $response->getData()->caption ?? '', $response->getData()->attachment_path ?? null);
                 return $response;
 
-            // case str_contains($text, 'gif cuaca') || str_contains($text, 'buatkan gif cuaca') || str_contains($text, 'tolong gif cuaca'):
-            //     return $this->GIFCuaca($text);
+                // case str_contains($text, 'gif cuaca') || str_contains($text, 'buatkan gif cuaca') || str_contains($text, 'tolong gif cuaca'):
+                //     return $this->GIFCuaca($text);
 
-            // case str_contains($text, 'audio cuaca') || str_contains($text, 'tts cuaca') || str_contains($text, 'suarakan cuaca'):
-            //     return $this->audioCuaca($text);
+                // case str_contains($text, 'audio cuaca') || str_contains($text, 'tts cuaca') || str_contains($text, 'suarakan cuaca'):
+                //     return $this->audioCuaca($text);
 
             case str_contains($text, 'cuaca'):
                 $response = $this->cuacaBiasa($text);
-                $this->saveChat('ai', $response->getData()->reply ?? '', 'text', null);
+                $this->saveChat('ai', $response->getData()->reply ?? '', 'text', null, null);
                 return $response;
 
             default:
@@ -57,10 +59,9 @@ class ChatController extends Controller
 
         $defaultReply =
             "Halo! 👋 Ada yang bisa saya bantu hari ini?\n\n" .
-                "🌦️ Cek cuaca: ketik 'cuaca Malang'\n" .
-                "🖼️ Gambar cuaca: 'gambarkan cuaca Malang'\n" .
-                "📹 Video cuaca: 'video cuaca Malang'\n"
-            ;
+            "🌦️ Cek cuaca: ketik 'cuaca Malang'\n" .
+            "🖼️ Gambar cuaca: 'gambarkan cuaca Malang'\n" .
+            "📹 Video cuaca: 'video cuaca Malang'\n";
 
         $response = $defaultReply;
         $this->saveChat('ai', $response, 'text', null);
@@ -205,22 +206,19 @@ class ChatController extends Controller
         $kota = $match[2] ?? 'Malang';
 
         $cuaca = $this->cekCuaca($kota);
-
         $promptVideo = "
             Buatkan naskah singkat seperti presenter berita cuaca sedang membacakan laporan langsung.
-            Naskah harus terdengar natural, ramah, dan profesional.
-            Data cuaca:
+            Naskah harus terdengar natural, ramah, dan profesional. Data cuaca:
             - Kota: $kota
             - Kondisi: {$cuaca['deskripsi']}
             - Suhu: {$cuaca['suhu']} derajat Celcius
-
             Buat naskah maksimal 2 kalimat, jelas, komunikatif, dan cocok untuk dibacakan di video cuaca.
             Jangan menambahkan data lain di luar informasi di atas.
         ";
 
         $videoResponse = $this->askGemini($promptVideo);
 
-        // generate video
+        // Generate video HeyGen
         $response = Http::withToken(env('HEYGEN_KEY'))
             ->post("https://api.heygen.com/v2/video/generate", [
                 "video_inputs" => [[
@@ -243,7 +241,7 @@ class ChatController extends Controller
 
         $videoId = $response["data"]["video_id"];
 
-        // tunggu sampai selesai
+        // menunggu video selesai
         while (true) {
             sleep(5);
 
@@ -254,14 +252,54 @@ class ChatController extends Controller
                 ->json();
 
             if (($status["data"]["status"] ?? '') === "completed") {
+
+                $remoteUrl = $status["data"]["video_url"];
+
+                $saved = $this->saveVideo($remoteUrl);
+
                 return response()->json([
                     "type" => "video",
                     "status" => "completed",
                     "text" => $videoResponse,
-                    "video_url" => $status["data"]["video_url"] ?? null,
+                    "video_url" => $remoteUrl,
+                    "attachment_path" => $saved['path'] ?? null,
                     "caption" => "Berikut video cuaca untuk kota {$kota}."
                 ]);
             }
+        }
+    }
+
+    public function saveVideo($videoUrl)
+    {
+        try {
+            $filename = 'weather_' . time() . '.mp4';
+
+            // Pastikan folder exists
+            Storage::disk('public')->makeDirectory('videos');
+
+            // Download menggunakan HTTP client Laravel (lebih aman dari file_get_contents)
+            $response = Http::timeout(120)->get($videoUrl);
+
+            if (!$response->successful()) {
+                return [
+                    'success' => false,
+                    'error' => 'Gagal mengunduh video dari URL.'
+                ];
+            }
+
+            // Simpan video ke storage/app/public/videos/
+            Storage::disk('public')->put('videos/' . $filename, $response->body());
+
+            return [
+                'success' => true,
+                'filename' => $filename,
+                'path' => asset('storage/videos/' . $filename)
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
         }
     }
 

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->text('message');
             $table->enum('type', ['text', 'image', 'video', 'audio', 'gif'])->default('text');
             $table->string('caption')->nullable();
+            $table->string('attachment_path')->nullable();
             $table->timestamps();
         });
     }
