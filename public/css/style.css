@@ -1,0 +1,83 @@
+.quick-btn {
+    @apply px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg text-sm hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer;
+}
+
+/* ☀ cerah */
+.clear-bg {
+    background: linear-gradient(to bottom, #FFE259, #FFA751);
+}
+
+/* ☁ mendung */
+.cloudy-bg {
+    background: #cfd3d7;
+}
+
+/* 🌧 hujan + animasi */
+.rain-bg {
+    background: #5f6f81;
+    position: relative;
+    overflow: hidden;
+}
+
+.rain-bg::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('https://i.imgur.com/7fX2gZP.png');
+    /* sprite rain kecil */
+    animation: rain 0.4s linear infinite;
+    opacity: 0.7;
+}
+
+@keyframes rain {
+    0% {
+        background-position: 0 0;
+    }
+
+    100% {
+        background-position: -100px 100px;
+    }
+}
+
+/* 🌩 badai (kilat) */
+.storm-bg {
+    background: #2e2e2e;
+    position: relative;
+    overflow: hidden;
+}
+
+.storm-bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.8);
+    opacity: 0;
+    animation: lightning 4s infinite;
+}
+
+@keyframes lightning {
+
+    0%,
+    90% {
+        opacity: 0;
+    }
+
+    92% {
+        opacity: 1;
+    }
+
+    93% {
+        opacity: 0;
+    }
+
+    95% {
+        opacity: 1;
+    }
+
+    96% {
+        opacity: 0;
+    }
+}
