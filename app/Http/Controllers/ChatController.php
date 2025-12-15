@@ -65,7 +65,9 @@ class ChatController extends Controller
             "Halo! 👋 Ada yang bisa saya bantu hari ini?\n\n" .
             "🌦️ Cek cuaca: ketik 'cuaca Malang'\n" .
             "🖼️ Gambar cuaca: 'gambarkan cuaca Malang'\n" .
-            "📹 Video cuaca: 'video cuaca Malang'\n";
+            "📹 Video cuaca: 'video cuaca Malang'\n" .
+            "🎞️ GIF cuaca: 'gif cuaca Malang'\n" .
+            "🎵 Audio cuaca: 'audio cuaca Malang'\n";
 
         $response = $defaultReply;
         $this->saveChat('ai', $response, 'text', null);
@@ -126,19 +128,19 @@ class ChatController extends Controller
         $kelembapan = $data['main']['humidity'] ?? '';
         $angin = $data['wind']['speed'] ?? '';
 
-        $promptText = "
-            Buatkan respon ramah, natural, dan seperti asisten cuaca.
-            Jelaskan kepada pengguna tentang kondisi cuaca saat ini di kota {$kota}.
+         $promptText = "
+            Buatkan laporan cuaca singkat untuk WhatsApp target lokasi: {$kota}.
+            Tambahkan kalimat sapaan yang ramah di awal berdasarkan kota tersebut.
 
-            Berikut data cuacanya:
-            - Kondisi: {$cuaca}
-            - Suhu: {$suhu}°C
-            - Terasa seperti: {$terasa}°C
-            - Kelembapan: {$kelembapan}%
-            - Kecepatan angin: {$angin} m/s
+            Data: {$cuaca}, {$suhu}°C, Kelembapan {$kelembapan}%, Angin {$angin} m/s, Terasa seperti {$terasa}°C.
 
-            Berikan satu paragraf saja, jangan terlalu panjang, jangan tampilkan bullet list.
-            Buat seperti percakapan WhatsApp.
+            Tugasmu:
+            Rangkum kondisi cuaca tersebut dalam satu paragraf pendek yang enak dibaca.
+            Lalu, di baris baru, tambahkan '💡 Tips:' yang berisi gabungan saran outfit, makanan, dan lagu yang cocok secara ringkas.
+
+            Contoh gaya:
+            'Siang ini Malang panas terik banget, Guys! Suhu tembus 30°C.
+            💡 Tips: Pake kaos katun aja, jangan lupa minum Es Teh, dan setel lagu pop ceria biar makin semangat!'
         ";
 
         $textResponse = $this->askGemini($promptText);

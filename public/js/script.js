@@ -58,9 +58,9 @@ document.getElementById('composer').addEventListener('submit', async e => {
             appendMessage(data.reply, 'received');
         }
 
-        if (data.weather) {
-            setWeatherBackground(data.weather);
-        }
+        // if (data.weather) {
+        //     setWeatherBackground(data.weather);
+        // }
 
     } catch (error) {
         hideTyping();
