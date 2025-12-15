@@ -53,7 +53,7 @@ document.getElementById('composer').addEventListener('submit', async e => {
         } else if (data.type === "audio") {
             appendAudio(data.attachment_path, data.caption);
         } else if (data.type === "gif") {
-            appendGIF(data.gifUrl, data.caption);
+            appendGIF(data.url, data.caption);
         } else {
             appendMessage(data.reply, 'received');
         }
@@ -154,17 +154,19 @@ function appendVideo(attachment_path) {
     scrollBottom();
 }
 
-function appendGIF(gifUrl) {
+function appendGIF(url) {
     const wrapper = document.createElement('div');
     wrapper.className = 'flex items-start space-x-3';
 
+    const caption = arguments[1] || '';
+
     wrapper.innerHTML = `
-            <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm">AI</div>
+            <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm">W</div>
             <div>
                 <figure class="max-w-xs">
-                <img src="${gifUrl}"
+                <img src="${url}"
                     class="rounded-xl shadow block mt-2">
-                <figcaption class="text-xs text-gray-500 dark:text-gray-400 italic mt-2">GIF: ${escapeHtml(caption)}</figcaption>
+                ${caption ? `<figcaption class="text-xs text-gray-500 dark:text-gray-400 italic mt-2">${escapeHtml(caption)}</figcaption>` : ''}
                 <div class="text-xs text-gray-500 mt-1">${timeNow()}</div>
                 </figure>
             </div>

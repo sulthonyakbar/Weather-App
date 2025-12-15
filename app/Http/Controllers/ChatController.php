@@ -42,8 +42,10 @@ class ChatController extends Controller
                 $this->saveChat('ai', $response->getData()->text ?? '', 'video', $response->getData()->caption ?? '', $response->getData()->attachment_path ?? null);
                 return $response;
 
-                // case str_contains($text, 'gif cuaca') || str_contains($text, 'buatkan gif cuaca') || str_contains($text, 'tolong gif cuaca'):
-                //     return $this->GIFCuaca($text);
+            case str_contains($text, 'gif cuaca') || str_contains($text, 'buatkan gif cuaca') || str_contains($text, 'tolong gif cuaca'):
+                $response = $this->GIFCuaca($text);
+                $this->saveChat('ai', $response->getData()->url ?? '', 'gif', $response->getData()->caption ?? '', null);
+                return $response;
 
             case str_contains($text, 'audio cuaca') || str_contains($text, 'tts cuaca') || str_contains($text, 'suarakan cuaca'):
                 $response = $this->audioCuaca($text);
@@ -305,40 +307,40 @@ class ChatController extends Controller
         }
     }
 
-    // public function GIFCuaca($text)
-    // {
-    //     preg_match('/(gif cuaca|buatkan gif cuaca|tolong gif cuaca) (.*)/', $text, $match);
-    //     $kota = $match[2] ?? 'Malang';
+    public function GIFCuaca($text)
+    {
+        preg_match('/(gif cuaca|buatkan gif cuaca|tolong gif cuaca) (.*)/', $text, $match);
+        $kota = $match[2] ?? 'Malang';
 
-    //     $cuaca = $this->cekCuaca($kota);
+        $cuaca = $this->cekCuaca($kota);
 
-    //     $promptGIF = "
-    //         Buatkan keyword maksimal 2 kata untuk GIF tentang kondisi cuaca berikut:
-    //         - Deskripsi cuaca: {$cuaca['deskripsi']}
-    //         - Suhu: {$cuaca['suhu']} derajat celcius.'
-    //         Contoh: 'hujan deras', 'cerah berawan'
-    //         Berikan hanya keyword, tanpa kalimat tambahan.
-    //     ";
+        $promptGIF = "
+            Buatkan keyword maksimal 2 kata untuk GIF tentang kondisi cuaca berikut:
+            - Deskripsi cuaca: {$cuaca['deskripsi']}
+            - Suhu: {$cuaca['suhu']} derajat celcius.'
+            Contoh: 'hujan deras', 'cerah berawan'
+            Berikan hanya keyword, tanpa kalimat tambahan.
+        ";
 
-    //     $gifResponse = $this->askGemini($promptGIF);
+        $gifResponse = $this->askGemini($promptGIF);
 
-    //     $url = "https://g.tenor.com/v1/search?q="
-    //         . urlencode($gifResponse)
-    //         . "&key=LIVDSRZULELA&limit=1";
+        $url = "https://g.tenor.com/v1/search?q="
+            . urlencode($gifResponse)
+            . "&key=LIVDSRZULELA&limit=1";
 
-    //     $response = Http::get($url)->json();
+        $response = Http::get($url)->json();
 
-    //     $gifUrl = $response['results'][0]['media'][0]['gif']['url']
-    //         ?? $response['results'][0]['media'][0]['tinygif']['url']
-    //         ?? null;
+        $gifUrl = $response['results'][0]['media'][0]['gif']['url']
+            ?? $response['results'][0]['media'][0]['tinygif']['url']
+            ?? null;
 
-    //     return response()->json([
-    //         "type" => "gif",
-    //         "keyword" => $gifResponse,
-    //         "url" => $gifUrl,
-    //         "caption" => "Berikut GIF cuaca untuk kota {$kota}."
-    //     ]);
-    // }
+        return response()->json([
+            "type" => "gif",
+            "keyword" => $gifResponse,
+            "url" => $gifUrl,
+            "caption" => "Berikut GIF cuaca untuk kota {$kota}."
+        ]);
+    }
 
     public function audioCuaca($text)
     {

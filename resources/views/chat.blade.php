@@ -101,6 +101,8 @@
                                         appendImage(message, caption);
                                     } else if (dataType === 'audio') {
                                         appendAudio(path, caption);
+                                    } else if (dataType === 'gif') {
+                                        appendGIF(message, caption);
                                     } else {
                                         appendMessage(message, type);
                                     }
@@ -140,7 +142,9 @@
                 <button
                     class="quick-btn text-indigo-600 hover:bg-indigo-100 dark:text-indigo-400 dark:hover:bg-indigo-700 dark:hover:text-indigo-100">Audio
                     Cuaca Kota</button>
-
+                <button
+                    class="quick-btn text-indigo-600 hover:bg-indigo-100 dark:text-indigo-400 dark:hover:bg-indigo-700 dark:hover:text-indigo-100">GIF
+                    Cuaca Kota</button>
             </div>
 
             <!-- Composer -->
