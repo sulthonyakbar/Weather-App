@@ -89,15 +89,18 @@
                         <script>
                             document.addEventListener('DOMContentLoaded', function() {
                                 const message = `{!! addslashes($chat->message) !!}`;
+                                const path = '{{ $chat->attachment_path ?? '' }}';
                                 const type = '{{ $chat->sender === 'user' ? 'sent' : 'received' }}';
                                 const caption = '{{ $chat->caption ?? '' }}';
                                 const dataType = '{{ $chat->type ?? 'text' }}';
 
                                 if (type === 'received') {
                                     if (dataType === 'video') {
-                                        appendVideo(message, caption);
+                                        appendVideo(path, caption);
                                     } else if (dataType === 'image') {
                                         appendImage(message, caption);
+                                    } else if (dataType === 'audio') {
+                                        appendAudio(path, caption);
                                     } else {
                                         appendMessage(message, type);
                                     }
@@ -134,6 +137,10 @@
                 <button
                     class="quick-btn text-indigo-600 hover:bg-indigo-100 dark:text-indigo-400 dark:hover:bg-indigo-700 dark:hover:text-indigo-100">Video
                     Cuaca Kota</button>
+                <button
+                    class="quick-btn text-indigo-600 hover:bg-indigo-100 dark:text-indigo-400 dark:hover:bg-indigo-700 dark:hover:text-indigo-100">Audio
+                    Cuaca Kota</button>
+
             </div>
 
             <!-- Composer -->

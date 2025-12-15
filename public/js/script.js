@@ -51,7 +51,7 @@ document.getElementById('composer').addEventListener('submit', async e => {
         } else if (data.type === "video") {
             appendVideo(data.attachment_path, data.caption);
         } else if (data.type === "audio") {
-            appendAudio(data.url, data.caption);
+            appendAudio(data.attachment_path, data.caption);
         } else if (data.type === "gif") {
             appendGIF(data.gifUrl, data.caption);
         } else {
@@ -174,18 +174,18 @@ function appendGIF(gifUrl) {
     scrollBottom();
 }
 
-function appendAudio(url) {
+function appendAudio(attachment_path) {
     const wrapper = document.createElement('div');
     wrapper.className = 'flex items-start space-x-3';
 
     const caption = arguments[1] || '';
 
     wrapper.innerHTML = `
-            <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm">AI</div>
+            <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm">W</div>
             <div>
                 <figure class="max-w-xs">
                 <audio controls class="mt-2 w-full">
-                    <source src="${url}" type="audio/mpeg">
+                    <source src="${attachment_path}" type="audio/mpeg">
                 </audio>
                 ${caption ? `<figcaption class="text-xs text-gray-500 dark:text-gray-400 italic mt-2">${escapeHtml(caption)}</figcaption>` : ''}
                 <div class="text-xs text-gray-500 mt-1">${timeNow()}</div>

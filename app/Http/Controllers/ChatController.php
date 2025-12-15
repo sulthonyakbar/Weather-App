@@ -39,14 +39,16 @@ class ChatController extends Controller
 
             case str_contains($text, 'video cuaca') || str_contains($text, 'buatkan video cuaca') || str_contains($text, 'tolong video cuaca'):
                 $response = $this->videoCuaca($text);
-                $this->saveChat('ai', $response->getData()->video_url ?? $response->getData()->text ?? '', 'video', $response->getData()->caption ?? '', $response->getData()->attachment_path ?? null);
+                $this->saveChat('ai', $response->getData()->text ?? '', 'video', $response->getData()->caption ?? '', $response->getData()->attachment_path ?? null);
                 return $response;
 
                 // case str_contains($text, 'gif cuaca') || str_contains($text, 'buatkan gif cuaca') || str_contains($text, 'tolong gif cuaca'):
                 //     return $this->GIFCuaca($text);
 
-                // case str_contains($text, 'audio cuaca') || str_contains($text, 'tts cuaca') || str_contains($text, 'suarakan cuaca'):
-                //     return $this->audioCuaca($text);
+            case str_contains($text, 'audio cuaca') || str_contains($text, 'tts cuaca') || str_contains($text, 'suarakan cuaca'):
+                $response = $this->audioCuaca($text);
+                $this->saveChat('ai', $response->getData()->text ?? '', 'audio', $response->getData()->caption ?? '', $response->getData()->attachment_path ?? null);
+                return $response;
 
             case str_contains($text, 'cuaca'):
                 $response = $this->cuacaBiasa($text);
@@ -338,47 +340,74 @@ class ChatController extends Controller
     //     ]);
     // }
 
-    // public function audioCuaca($text)
-    // {
-    //     preg_match('/(suarakan cuaca|audio cuaca|tts cuaca) (.*)/', $text, $match);
-    //     $kota = $match[2] ?? 'Malang';
+    public function audioCuaca($text)
+    {
+        preg_match('/(suarakan cuaca|audio cuaca|tts cuaca) (.*)/', $text, $match);
+        $kota = $match[2] ?? 'Malang';
 
-    //     $cuaca = $this->cekCuaca($kota);
+        $cuaca = $this->cekCuaca($kota);
 
-    //     $promptAudio = "
-    //         Buatkan narasi audio dengan gaya ramah dan informatif tentang kondisi cuaca berikut:
-    //         - Kota: $kota
-    //         - Deskripsi cuaca: {$cuaca['deskripsi']}
-    //         - Suhu: {$cuaca['suhu']} derajat celcius.
-    //         Hasilkan narasi deskriptif, jelas, dan mudah dipahami. Jangan tambahkan informasi di luar data yang diberikan.
-    //         Contoh: 'Halo, ini laporan cuaca untuk kota Malang. Saat ini kondisi adalah cerah dengan suhu 30 derajat Celcius. Semoga harimu menyenangkan!'
-    //     ";
+        $promptAudio = "
+            Buatkan narasi audio dengan gaya ramah dan informatif tentang kondisi cuaca berikut:
+            - Kota: $kota
+            - Deskripsi cuaca: {$cuaca['deskripsi']}
+            - Suhu: {$cuaca['suhu']} derajat celcius.
+            Hasilkan narasi deskriptif singkat, jelas, dan mudah dipahami (MAKSIMAL 200 KARAKTER). Jangan tambahkan informasi di luar data yang diberikan.
+            Contoh: 'Halo, ini laporan cuaca untuk kota Malang. Saat ini kondisi adalah cerah dengan suhu 30 derajat Celcius. Semoga harimu menyenangkan!'
+        ";
 
-    //     $audioResponse = $this->askGemini($promptAudio);
+        $audioResponse = $this->askGemini($promptAudio);
 
-    //     $url = "https://translate.google.com/translate_tts?ie=UTF-8&q="
-    //         . urlencode($audioResponse)
-    //         . "&tl=id&client=tw-ob&ttsspeed=1";
+        $savedAudio = $this->saveAudio($audioResponse);
 
-    //     return response()->json([
-    //         "type" => "audio",
-    //         "text" => $audioResponse,
-    //         "url" => $url,
-    //         "caption" => "Berikut audio cuaca untuk kota {$kota}."
-    //     ]);
-    // }
+        if (!$savedAudio['success']) {
+            return [
+                'type' => 'text',
+                'reply' => 'Gagal membuat audio cuaca.'
+            ];
+        }
 
-    // public function proxyTTS(Request $request)
-    // {
-    //     $text = $request->query('text', 'Halo dunia');
-    //     $url = "https://translate.google.com/translate_tts?ie=UTF-8&q="
-    //         . urlencode($text)
-    //         . "&tl=id&client=tw-ob&ttsspeed=1";
+        return response()->json([
+            "type" => "audio",
+            "text" => $audioResponse,
+            "attachment_path" => $savedAudio['path'] ?? null,
+            "caption" => "Berikut audio cuaca untuk kota {$kota}."
+        ]);
+    }
 
-    //     $audio = file_get_contents($url);
+    public function saveAudio($audioResponse)
+    {
+        try {
+            $filename = 'audio_weather_' . time() . '.mp3';
 
-    //     return response($audio, 200)->header('Content-Type', 'audio/mpeg');
-    // }
+            Storage::disk('public')->makeDirectory('audio');
+
+            $ttsUrl = "https://translate.google.com/translate_tts?ie=UTF-8&q="
+                . urlencode($audioResponse)
+                . "&tl=id&client=tw-ob&ttsspeed=1";
+
+            $response = Http::withHeaders([
+                'User-Agent' => 'Mozilla/5.0'
+            ])->get($ttsUrl);
+
+            if (!$response->successful()) {
+                return ['success' => false, 'error' => 'Gagal generate audio'];
+            }
+
+            Storage::disk('public')->put('audio/' . $filename, $response->body());
+
+            return [
+                'success' => true,
+                'path' => asset('storage/audio/' . $filename),
+                'filename' => $filename
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
 
     public function clearChat()
     {
