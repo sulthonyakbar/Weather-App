@@ -99,7 +99,7 @@
                                 const time = formatTime(createdAt);
 
                                 if (lastDate !== chatDate) {
-                                    appendDateDivider(formatChatDate(createdAt));
+                                    appendDateDivider(createdAt);
                                     lastDate = chatDate;
                                 }
 

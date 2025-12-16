@@ -25,7 +25,7 @@ class ChatController extends Controller
             'attachment_path' => $attachment_path ?? null,
         ]);
     }
-
+        
     public function handleChat(Request $request)
     {
         $text = strtolower($request->input('message'));

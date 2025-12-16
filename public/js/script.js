@@ -68,6 +68,7 @@ document.getElementById('composer').addEventListener('submit', async e => {
     }
 });
 
+// Chat Rendering Logic
 let lastDate = null;
 
 function formatChatDate(dateString) {
@@ -98,17 +99,18 @@ function formatTime(dateString) {
         d.getMinutes().toString().padStart(2, '0');
 }
 
-function appendDateDivider(label) {
+// Append date divider
+function appendDateDivider(dateString) {
+    const label = formatChatDate(dateString);
+
     const divider = document.createElement('div');
-    divider.className = 'flex justify-center my-4';
-    divider.innerHTML = `
-        <span class="px-4 py-1 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full">
-            ${label}
-        </span>
-    `;
+    divider.className = 'chat-date-divider';
+    divider.innerHTML = `<span>${label}</span>`;
+
     messages.appendChild(divider);
 }
 
+// Append message
 function appendMessage(text, type = 'received') {
     const wrapper = document.createElement('div');
     wrapper.className =
@@ -149,6 +151,7 @@ function appendMessage(text, type = 'received') {
     scrollBottom();
 }
 
+// Append Image
 function appendImage(url) {
     const wrapper = document.createElement('div');
     wrapper.className = 'flex items-start space-x-3';
@@ -175,6 +178,7 @@ function appendImage(url) {
     scrollBottom();
 }
 
+// Append Video
 function appendVideo(attachment_path) {
     const wrapper = document.createElement('div');
     wrapper.className = 'flex items-start space-x-3';
@@ -204,6 +208,7 @@ function appendVideo(attachment_path) {
     scrollBottom();
 }
 
+// Append GIF
 function appendGIF(url) {
     const wrapper = document.createElement('div');
     wrapper.className = 'flex items-start space-x-3';
@@ -227,6 +232,7 @@ function appendGIF(url) {
     scrollBottom();
 }
 
+// Append Audio
 function appendAudio(attachment_path) {
     const wrapper = document.createElement('div');
     wrapper.className = 'flex items-start space-x-3';

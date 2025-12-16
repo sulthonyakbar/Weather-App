@@ -81,3 +81,22 @@
         opacity: 0;
     }
 }
+
+.chat-date-divider {
+    position: sticky;
+    top: 10px;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    margin: 12px 0;
+    pointer-events: none;
+}
+
+.chat-date-divider span {
+    background: #374151;
+    color: #d1d5db;
+    opacity: 0.75;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 9999px;
+}
