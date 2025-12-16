@@ -68,12 +68,55 @@ document.getElementById('composer').addEventListener('submit', async e => {
     }
 });
 
-function appendMessage(text, type = 'received', time) {
+let lastDate = null;
+
+function formatChatDate(dateString) {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+        return 'Hari ini';
+    }
+
+    if (date.toDateString() === yesterday.toDateString()) {
+        return 'Kemarin';
+    }
+
+    return date.toLocaleDateString('id-ID', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+}
+
+function formatTime(dateString) {
+    const d = new Date(dateString);
+    return d.getHours().toString().padStart(2, '0') + ':' +
+        d.getMinutes().toString().padStart(2, '0');
+}
+
+function appendDateDivider(label) {
+    const divider = document.createElement('div');
+    divider.className = 'flex justify-center my-4';
+    divider.innerHTML = `
+        <span class="px-4 py-1 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full">
+            ${label}
+        </span>
+    `;
+    messages.appendChild(divider);
+}
+
+function appendMessage(text, type = 'received') {
     const wrapper = document.createElement('div');
     wrapper.className =
         type === 'sent' ?
             'flex items-start justify-end' :
             'flex items-start space-x-3';
+
+    const time = arguments[2] || '';
 
     if (type === 'sent') {
         wrapper.innerHTML = `

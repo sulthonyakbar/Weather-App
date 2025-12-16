@@ -93,7 +93,15 @@
                                 const type = '{{ $chat->sender === 'user' ? 'sent' : 'received' }}';
                                 const caption = '{{ $chat->caption ?? '' }}';
                                 const dataType = '{{ $chat->type ?? 'text' }}';
-                                const time = '{{ $chat->created_at->format('H:i') }}';
+                                const createdAt = '{{ $chat->created_at->toIso8601String() }}';
+
+                                const chatDate = createdAt.split('T')[0];
+                                const time = formatTime(createdAt);
+
+                                if (lastDate !== chatDate) {
+                                    appendDateDivider(formatChatDate(createdAt));
+                                    lastDate = chatDate;
+                                }
 
                                 if (type === 'received') {
                                     if (dataType === 'video') {
