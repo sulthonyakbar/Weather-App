@@ -68,7 +68,7 @@ document.getElementById('composer').addEventListener('submit', async e => {
     }
 });
 
-function appendMessage(text, type = 'received') {
+function appendMessage(text, type = 'received', time) {
     const wrapper = document.createElement('div');
     wrapper.className =
         type === 'sent' ?
@@ -82,7 +82,7 @@ function appendMessage(text, type = 'received') {
                     ${escapeHtml(text)}
                 </div>
                 <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    ${timeNow()}
+                    ${time}
                 </div>
             </div>
         `;
@@ -96,7 +96,7 @@ function appendMessage(text, type = 'received') {
                     ${escapeHtml(text)}
                 </div>
                 <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    ${timeNow()}
+                    ${time}
                 </div>
             </div>
         `;
@@ -111,16 +111,19 @@ function appendImage(url) {
     wrapper.className = 'flex items-start space-x-3';
 
     const caption = arguments[1] || '';
+    const time = arguments[2] || '';
 
     wrapper.innerHTML = `
                 <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm">
                     W
                 </div>
                 <div>
-                    <figure class="max-w-xs">
-                        <img src="${url}" class="rounded-xl shadow block">
-                        ${caption ? `<figcaption class="text-xs text-gray-500 dark:text-gray-400 italic mt-2">${escapeHtml(caption)}</figcaption>` : ''}
-                        <div class="text-xs text-gray-500 mt-1">${timeNow()}</div>
+                   <figure class="max-w-xs cursor-pointer">
+                        <img src="${url}"
+                            class="rounded-xl shadow block hover:opacity-90 transition"
+                            onclick="openImage('${url}')">
+                        ${caption ? `<figcaption class="text-xs text-gray-500 italic mt-2">${escapeHtml(caption)}</figcaption>` : ''}
+                        <div class="text-xs text-gray-500 mt-1">${time}</div>
                     </figure>
                 </div>
             `;
@@ -134,19 +137,23 @@ function appendVideo(attachment_path) {
     wrapper.className = 'flex items-start space-x-3';
 
     const caption = arguments[1] || '';
+    const time = arguments[2] || '';
 
     wrapper.innerHTML = `
                 <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm">
                     W
                 </div>
                 <div>
-                    <figure class="max-w-xs">
-                        <video controls class="rounded-xl max-w-xs shadow">
-                            <source src="${attachment_path}" type="video/mp4">
-                        </video>
-                        ${caption ? `<figcaption class="text-xs text-gray-500 dark:text-gray-400 italic mt-2">${escapeHtml(caption)}</figcaption>` : ''}
-                        <div class="text-xs text-gray-500 mt-1">${timeNow()}</div>
-                    </figure>
+                   <figure class="max-w-xs cursor-pointer">
+                    <video
+                        class="rounded-xl shadow max-w-xs hover:opacity-90 transition"
+                        muted
+                        onclick="openVideo('${attachment_path}')">
+                        <source src="${attachment_path}" type="video/mp4">
+                    </video>
+                    ${caption ? `<figcaption class="text-xs text-gray-500 italic mt-2">${escapeHtml(caption)}</figcaption>` : ''}
+                    <div class="text-xs text-gray-500 mt-1">${time}</div>
+                </figure>
                 </div>
             `;
 
@@ -159,6 +166,7 @@ function appendGIF(url) {
     wrapper.className = 'flex items-start space-x-3';
 
     const caption = arguments[1] || '';
+    const time = arguments[2] || '';
 
     wrapper.innerHTML = `
             <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm">W</div>
@@ -167,7 +175,7 @@ function appendGIF(url) {
                 <img src="${url}"
                     class="rounded-xl shadow block mt-2">
                 ${caption ? `<figcaption class="text-xs text-gray-500 dark:text-gray-400 italic mt-2">${escapeHtml(caption)}</figcaption>` : ''}
-                <div class="text-xs text-gray-500 mt-1">${timeNow()}</div>
+                <div class="text-xs text-gray-500 mt-1">${time}</div>
                 </figure>
             </div>
             `;
@@ -181,6 +189,7 @@ function appendAudio(attachment_path) {
     wrapper.className = 'flex items-start space-x-3';
 
     const caption = arguments[1] || '';
+    const time = arguments[2] || '';
 
     wrapper.innerHTML = `
             <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm">W</div>
@@ -190,18 +199,13 @@ function appendAudio(attachment_path) {
                     <source src="${attachment_path}" type="audio/mpeg">
                 </audio>
                 ${caption ? `<figcaption class="text-xs text-gray-500 dark:text-gray-400 italic mt-2">${escapeHtml(caption)}</figcaption>` : ''}
-                <div class="text-xs text-gray-500 mt-1">${timeNow()}</div>
+                <div class="text-xs text-gray-500 mt-1">${time}</div>
                 </figure>
             </div>
             `;
 
     messages.appendChild(wrapper);
     scrollBottom();
-}
-
-function timeNow() {
-    const d = new Date();
-    return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
 }
 
 function scrollBottom() {
@@ -278,24 +282,47 @@ if (localStorage.getItem('theme') === 'dark') {
 // Scroll to bottom on load
 window.addEventListener('load', () => setTimeout(scrollBottom, 50));
 
-// function setWeatherBackground(condition) {
-//     const bg = document.getElementById('weatherBg');
+const mediaModal = document.getElementById('mediaModal');
+const modalImage = document.getElementById('modalImage');
+const modalVideo = document.getElementById('modalVideo');
+const closeMedia = document.getElementById('closeMedia');
 
-//     // reset class
-//     bg.classList.remove('clear-bg', 'cloudy-bg', 'rain-bg', 'storm-bg');
+// Open Image
+function openImage(src) {
+    modalVideo.pause();
+    modalVideo.classList.add('hidden');
 
-//     condition = condition.toLowerCase();
+    modalImage.src = src;
+    modalImage.classList.remove('hidden');
 
-//     if (condition.includes("cerah") || condition.includes("clear")) {
-//         bg.classList.add('clear-bg');
-//     }
-//     else if (condition.includes("Clouds") || condition.includes("cloud")) {
-//         bg.classList.add('cloudy-bg');
-//     }
-//     else if (condition.includes("Rain") || condition.includes("rain")) {
-//         bg.classList.add('rain-bg');
-//     }
-//     else if (condition.includes("badai") || condition.includes("storm") || condition.includes("thunder")) {
-//         bg.classList.add('storm-bg');
-//     }
-// }
+    mediaModal.classList.remove('hidden');
+    mediaModal.classList.add('flex');
+}
+
+// Open Video
+function openVideo(src) {
+    modalImage.classList.add('hidden');
+
+    modalVideo.src = src;
+    modalVideo.load();
+    modalVideo.classList.remove('hidden');
+
+    mediaModal.classList.remove('hidden');
+    mediaModal.classList.add('flex');
+}
+
+// Close modal
+function closeModal() {
+    modalVideo.pause();
+    mediaModal.classList.add('hidden');
+    mediaModal.classList.remove('flex');
+}
+
+// Events
+closeMedia.addEventListener('click', closeModal);
+
+mediaModal.addEventListener('click', (e) => {
+    if (e.target === mediaModal) {
+        closeModal();
+    }
+});

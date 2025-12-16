@@ -93,21 +93,22 @@
                                 const type = '{{ $chat->sender === 'user' ? 'sent' : 'received' }}';
                                 const caption = '{{ $chat->caption ?? '' }}';
                                 const dataType = '{{ $chat->type ?? 'text' }}';
+                                const time = '{{ $chat->created_at->format('H:i') }}';
 
                                 if (type === 'received') {
                                     if (dataType === 'video') {
-                                        appendVideo(path, caption);
+                                        appendVideo(path, caption, time);
                                     } else if (dataType === 'image') {
-                                        appendImage(message, caption);
+                                        appendImage(message, caption, time);
                                     } else if (dataType === 'audio') {
-                                        appendAudio(path, caption);
+                                        appendAudio(path, caption, time);
                                     } else if (dataType === 'gif') {
-                                        appendGIF(message, caption);
+                                        appendGIF(message, caption, time);
                                     } else {
-                                        appendMessage(message, type);
+                                        appendMessage(message, type, time);
                                     }
                                 } else {
-                                    appendMessage(message, type);
+                                    appendMessage(message, type, time);
                                 }
                             });
                         </script>
@@ -159,6 +160,22 @@
                     </button>
                 </div>
             </form>
+
+            <!-- Media Preview Modal -->
+            <div id="mediaModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50">
+
+                <!-- Close -->
+                <button id="closeMedia" class="absolute top-4 right-4 text-white text-2xl font-bold z-50">
+                    ✕
+                </button>
+
+                <!-- Image -->
+                <img id="modalImage" class="hidden max-h-full max-w-full rounded-lg shadow-lg">
+
+                <!-- Video -->
+                <video id="modalVideo" class="hidden max-h-full max-w-full rounded-lg shadow-lg" controls></video>
+            </div>
+
         </div>
     </div>
 
